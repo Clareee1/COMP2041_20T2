@@ -1,0 +1,95 @@
+#!/bin/dash
+
+#find the commit id and the file all the files that needed to be stated
+commit_id=$(cat .shrug/log.txt | head -1 | cut -d ' ' -f1)
+#if recorded
+if echo "$latest_id" |egrep '[0-9]+' > /dev/null
+then
+#find the files in all three files
+    filelist=$(find ./ .shrug/index/ .shrug/commits/$commit_id -type f | egrep -v 'shrug\.log|test.*|Diary|shrug-.*' | sed 's/.*\// /g' |sed 's/ *//g'| sort | uniq | sort)
+else
+#find the local,index and repo
+    filelist=$(find ./ .shrug/index/ -type f | egrep -v 'shrug\|test.*|Diary|shrug-.*' | sed 's/.*\// /g' | sed 's/ *//g'| sort | uniq | sort)
+fi
+
+
+#list all the possible situations in autotest
+for file in $filelist
+do
+    index_file=".shrug/index/$file"
+    repo_file=".shrug/commits/$commit_id/$file"
+
+    #checking the difference
+    localRepo=$(diff "$file" "$repo_file" 2>&1)
+    localIndex=$(diff "$file" "$index_file" 2>&1)
+    repoIndex=$(diff "$repo_file" "$index_file" 2>&1)
+    
+    if test -e "$file" #in local
+    then
+        if test -e "$index_file"  # in index
+        then
+            if test -e "$repo_file"  # in repo
+            then
+                # local == index
+                if test -z "$localIndex"                 
+                then
+                    if test ! -z "$repoIndex" 
+                    then
+                    # local == index != repo  
+                        echo "$file - file changed, changes staged for commit"                       
+                    # local== index == repo
+                    else
+                        echo "$file - same as repo"
+                    fi
+                else  
+                #local != index
+                    # local!= index != repo
+                    if test ! -z "$repoIndex" 
+                    then
+                        echo "$file - file changed, different changes staged for commit"    
+                    else  # local != index == repo  
+                        echo "$file - file changed, changes not staged for commit"
+                    fi
+                fi
+            # local index but not in repo
+            else  
+                #local != index
+                if test ! -z "$localIndex"  
+                then
+                    echo "$file - added to index, file changed"
+                else
+                    echo "$file - added to index"   
+                fi
+            fi
+        else  # local but not index
+            #in local only
+            if test ! -e "$repo_file"  
+            then
+                echo "$file - untracked"
+            else 
+                #in local and repo
+                echo "$file - untracked"
+            fi
+        fi
+    else  # not in local
+        #not in local,index
+        if test ! -e "$index_file"  
+        then
+        #not in local,index,repo
+            if test -e "$repo_file"  #check whether in repo
+            then
+                echo "$file - deleted"  
+            fi
+        else               
+            #in index only
+            if test ! -e "$repo_file"  
+            then                
+                echo "$file - added to index, file deleted"
+             #in index and repo only
+            else  
+                echo "$file - file deleted"
+            fi       
+        fi
+    fi
+done
+

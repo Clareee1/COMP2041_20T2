@@ -1,0 +1,20 @@
+Date	Start	Stop	Activity	Comments
+
+7/01    12:00   6:00p    working on subset 0     
+done with all the functions and passed the basic test by myself
+
+7/02    8:00p   11:00p   debug on subset 0 to match the same error message as the autotest
+passes all the autotest
+ 
+7/05    10:00   5:00p    working on subsuet 1    
+done with all the functions but havent tested yet
+
+7/07    10:00   3:00p    debug shrug-commit[-a] & -rm   
+debugging and passing the aototest commit&rm done
+
+7/07    4:00p   6:00p   debug shrug-status since original the code doesnt have the output
+Passed all the autoest test in subset1 but need to trim the format
+
+7/09    11:00am  2:00pm   Re-change my code to match the error message in the shrug-rm part after the change of the lectuer.
+do the self test, finishing all the test file test00.sh-test09.sh
+

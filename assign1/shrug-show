@@ -1,0 +1,36 @@
+#!/bin/dash
+
+
+commit=$(echo "$1"| cut -d ':' -f1)
+name=$(echo "$1"| cut -d ':' -f2)
+
+#check the repo
+if [ "$(ls -d .shrug)" = "ls: cannot access .shrug: No such file or directory" ]
+then
+    echo "$0: error: your repository does not have any commits yet"
+fi
+
+#show process
+if test ! -z "$commit"  #which is the valid commit
+then
+    if test -e .shrug/commits/$commit
+    then
+        if test -e .shrug/commits/$commit/$name
+        then
+            cat .shrug/commits/$commit/$name
+        else
+            echo "$0: error: '$name' not found in commit $commit"
+        fi
+    else
+        echo "$0: error: unknown commit '$commit'"
+    fi
+else
+    if test -e .shrug/index/$name
+    then
+        cat .shrug/index/$name
+    else
+        echo "$0: error: '$name' not found in index"
+    fi
+fi
+
+

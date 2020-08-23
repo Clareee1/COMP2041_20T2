@@ -1,0 +1,121 @@
+#!/bin/dash
+
+
+if ! test -d ".shrug"  #-d: file exits and its a dictionary
+then
+    echo "shrug-add: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
+
+initial=$(ls ".shrug/commits") #which is empty initially
+#checking the validity
+if test $# -eq 2
+then
+    commit_msg="$2"
+    #if the first input is not -m
+    if test "$1" != "-m" 
+    then
+        echo "Usage: shrug-commit [-a] -m commit-message"
+        exit 1
+    fi
+elif test $# -eq 3
+then
+    commit_msg="$3"
+    if test -z "$ls .shrug/ls"
+    then
+        echo "nothing to commit"
+        exit 1
+    fi
+    #if the index is empty, there is nothing to commit
+    if test -z "$(ls .shrug/index)" 
+    then
+        echo "nothing to commit"
+        exit 1
+    fi
+    #if the second input is not -m
+    if test "$2" != "-m"
+    then
+        echo "Usage: shrug-commit [-a] -m commit-message"
+        exit 1
+    fi
+    #if the first input in not -a
+    if test "$1" != "-a"
+    then
+        echo "Usage: shrug-commit [-a] -m commit-message"
+        exit 1
+    fi
+else
+    echo "usage: shrug-commit [-a] -m commit-message"
+    exit 1    
+fi
+
+
+#with commit -a
+if test $# -eq 3 
+then
+    #iterate the index
+    for file in .shrug/index/*
+    do
+        newest=$(echo "$file"| sed s/".shrug\/index\/"//)    
+        if test -z "$(ls $newest 2>&1 /dev/null)" 
+        then
+            rm .shrug/index/$newest 2> /dev/null
+            continue
+        fi
+        
+        diff0=$(diff $newest $file)
+        if test ! -z "$diff0"
+        then
+        #copy to the index before the commit
+            cp $newest ".shrug/index/"
+        fi
+    done
+fi
+
+
+if test -z "$initial" 
+then
+    log="0 $commit_msg"
+    diff_1=$(ls .shrug/index)
+    if test ! -z "$diff_1"   #if not empty
+    then
+        cp -r .shrug/index .shrug/commits/0
+        sed -i "1s/^/$log/" .shrug/log.txt
+        echo "Committed as commit 0"
+        exit 1
+    else
+        echo "nothing to commit"
+        exit 1
+    fi    
+else
+    #count the latest commit num
+    latest=$(ls .shrug/commits | sort -n -r 2> /dev/null | head -1)
+    next=$((latest + 1))
+    log="$next $commit_msg" 
+    #eg:1 second commit
+    diff=$(diff -r .shrug/index .shrug/commits/$latest)
+    #recursively check the difference
+    for line in "$(ls .shrug/commits/$latest)" 
+    #if exists in the latest commits
+    do
+        if test -z "$(ls .shrug/index/$line 2>&1)" 
+        #however it doesnt exist in the index
+        then
+            rm -f $line 2>/dev/null  #remove it
+        fi
+    done
+    
+     if test ! -z "$diff"  #if not in index but in the latest commit
+    then
+        cp -r .shrug/index .shrug/commits/$next
+        sed -i "1s/^/$log\n/" .shrug/log.txt
+        echo "Committed as commit $next"
+        exit 1
+    else
+        echo "nothing to commit"
+        exit 1  
+    fi
+fi
+
+

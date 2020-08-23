@@ -1,0 +1,21 @@
+#!/bin/dash
+if ! test -d ".shrug"
+then
+    echo "$0: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
+#add
+for file in $@
+do
+    if test -e $file
+    then
+        cp "$file" ".shrug/index" 
+    elif   test -e .shrug/index/$file
+    then
+        rm -f .shrug/index/$file
+    else
+        echo "$0: error: can not open '$file'"
+        exit 1
+    fi  
+done

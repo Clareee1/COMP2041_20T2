@@ -1,0 +1,45 @@
+Date	    Start	    Stop	    Activity	    Comments 
+24/07      5pm          6pm         
+Reserched the examples and try to work on subset 0
+get familiar with the examples 0 & 1, finish the echo and system part
+
+25/07       11am        12pm
+Restructure the code after research online instead of using if elisif all the time,also
+draw the general idea of expr function
+pass the autotest subset 0
+
+25/07       4pm         5pm
+Doing subset 1
+finished the subset 1
+
+26/07      4pm          5pm
+debug on subset 1,there is always uninitialize error which takes me a lot time
+finished the debug subset 1 and pass all the autotest
+
+28/07      9:30am       11:30am
+Working on subset 2-- if/arg/quotes
+finished the subset 2 and pass the autotest
+
+30/07       10:11am     12:15am
+working on subset 3 -- if with test -r/-d condition and the comments
+I have also re-format today's if and the other one written in 28/07 to make it clearly of the structure
+Comments: Pass all the autotest except 'expr' in subset 3
+
+30/07       1:30pm        4:00pm  
+Still working on subset 3 -- working on expr it takes so long time since I combined it with the assign_variable function; Also working on the comments
+There are so many special cases on '=' particarly since it has different meaning,taking a lot of time.
+
+30/07       4:30pm       6:30pm
+start working on while-subset 3
+Finished the subset 3 and passed all the autotest    
+
+
+1/08        10:00am      11:30am
+Finished the subset 4, however I leave the last example series.sh alone since it is too complicated
+Passed the autotest of subset 4
+
+1/08        1:30pm       3:50pm
+working on dmeo & test.sh
+finished the demo&test,done my assignment 2!!
+  
+

@@ -1,0 +1,263 @@
+#!/bin/dash
+
+if test "$#" -eq 0
+then
+    echo "Usage $0: [--force][cached] <filenames>"
+    exit 1
+fi
+
+#checking --force or --cached
+force=0
+cached=0
+
+if test "$1" = '--force'
+then
+    force=1
+    shift
+fi
+
+if test "$1" = '--cached'
+then
+    cached=1
+    shift
+fi
+
+#repo error checking
+for file in "$@"
+do
+    if test "$file" = "--force"
+    then
+        continue
+    fi
+    
+    if test "$file" = "--cached"
+    then
+        continue
+    fi
+
+    #checking the difference
+    repo=$(ls .shrug/commits | sort -n -r 2> /dev/null|head -1)
+    localRepo=$(diff $file  .shrug/commits/$repo/$file 2>&1)
+    localIndex=$(diff $file .shrug/index/$file 2>&1)
+    repoIndex=$(diff .shrug/commits/$repo/$file .shrug/index/$file 2>&1)
+    
+    #assign the exsistence of file
+    existRepo=0
+    existIndex=0
+    existLocal=0
+    if test -e $file
+    then
+        existLocal=1
+    fi
+    if test -e .shrug/commits/$repo/$file
+    then
+        existRepo=1
+    fi
+    if test -e .shrug/index/$file
+    then
+        existIndex=1
+    fi
+    
+    #list the situation
+    #all not exist
+    if test $existRepo -eq 0 && test $existIndex -eq 0 && test $existLocal -eq 0
+    then
+        echo "$0: error: '$file' is not in the shrug repository"
+        exit 1
+    fi
+    #exist in local only
+    if test $existRepo -eq 0 && test $existIndex -eq 0 && test $existLocal -eq 1
+    then
+        echo "shrug-rm: error: '$file' is not in the shrug repository"
+        exit 1
+    fi
+    #exist in repo and local
+    if test $existRepo -eq 1 && test $existIndex -eq 0 && test $existLocal -eq 1
+    then
+        echo "$0: error: '$file' is not in the shrug repository"
+        exit 1
+    fi
+    #exist in repo
+    if test $existRepo -eq 1 && test $existIndex -eq 0 && test $existLocal -eq 0
+    then
+        echo "$0: error: '$file' is not in the shrug repository"
+        exit 1
+    fi
+    #not exist in local
+    if  test $existRepo -eq 1 && test $existIndex -eq 1 && test $existLocal -eq 0
+    then
+        continue 
+    fi
+    if test -z "$localIndex" 
+    then
+        if test $existRepo -eq 0
+        then
+            if test "$cached" -eq 1
+            then
+                continue
+            fi
+            echo "$0: error: '$file' has changes staged in the index"
+		    exit 1
+        fi
+    fi
+done
+
+#error checking  -- by force
+for file in "$@"
+do
+    if test "$file" = "--force"
+    then
+        continue
+    fi
+    
+    if test "$file" = "--cached"
+    then
+        continue
+    fi
+
+    #checking the difference
+    repo=$(ls .shrug/commits | sort -n -r 2> /dev/null|head -1)
+    localRepo=$(diff $file  .shrug/commits/$repo/$file 2>&1)
+    localIndex=$(diff $file .shrug/index/$file 2>&1)
+    repoIndex=$(diff .shrug/commits/$repo/$file .shrug/index/$file 2>&1)
+    
+    allEmp=0
+    allEx=0
+    
+    if test -z "$localRepo"
+    then
+        if test -z "$localIndex"
+        then
+            if test -z "$repoIndex"
+            then
+                allEmp=1
+            fi
+        fi        
+    elif test ! -z "$localRepo"  
+    then
+        if test ! -z "$localIndex"
+        then
+            if test ! -z "$repoIndex"
+            then
+                allEx=1
+            fi
+        fi
+    fi
+    
+    #if no cached and force
+    if test "$cached" -eq 0 && test "$force" -eq 0
+    then
+        if test "$allEmp" -eq 1
+        then
+            continue
+        elif test "$allEx" -eq 1 # local != index != repo
+        then
+            echo "$0: error: '$file' in index is different to both working file and repository"
+            exit 1
+        elif test -z "$localRepo" #local == repo
+        then
+            echo "$0: error: '$file' in index is different to both working file and repository"
+            exit 1
+        elif test -z "$localIndex"
+        then
+            echo "$0: error: '$file' has changes staged in the index"
+            exit 1
+        elif test -z "$repoIndex"
+        then
+            echo "$0: error: '$file' in repository is different to working file"
+			exit 1
+		fi	
+	fi	   
+    
+    #cached only
+    if test "$cached" -eq 1 && test "$force" -eq 0
+    then
+        if test "$allEmp" -eq 1
+        then
+            continue
+        elif test "$allEx" -eq 1 # local != index != repo
+        then
+            echo "$0: error: '$file' in index is different to both working file and repository"
+			exit 1
+		#if local == Repo
+	    elif test -z "$localRepo"
+	    then
+	        echo "$0: error: '$file' in repository is different to working file"
+			exit 1
+	    fi
+	fi    
+done
+
+
+#rm
+for file in "$@"
+do
+    if test "$file" = "--force"
+    then
+        continue
+    fi
+    
+    if test "$file" = "--cached"
+    then
+        continue
+    fi
+
+    #checking the difference
+    repo=$(ls .shrug/commits | sort -n -r 2> /dev/null|head -1)
+    localRepo=$(diff $file  .shrug/commits/$repo/$file 2>&1)
+    localIndex=$(diff $file .shrug/index/$file 2>&1)
+    repoIndex=$(diff .shrug/commits/$repo/$file .shrug/index/$file 2>&1)
+    allEmp=0
+    allEx=0
+
+    if test -z "$localRepo"
+    then
+        if test -z "$localIndex"
+        then
+            if test -z "$repoIndex"
+            then
+                allEmp=1
+            fi
+        fi        
+    elif test ! -z "$localRepo"  
+    then
+        if test ! -z "$localIndex"
+        then
+            if test ! -z "$repoIndex"
+            then
+                allEx=1
+            fi
+        fi
+    fi
+    
+    #if no cached and force
+    if test "$cached" -eq 0 && test "$force" -eq 0
+    then
+        rm -f "$file" 2> /dev/null
+        rm -f ".shrug/index/$file"
+        continue
+    fi
+     #if force and cached
+    if test "$force" -eq 1 && test "$cached"  -eq 1
+    then
+        rm -f ".shrug/index/$file"
+        continue
+    fi
+    #if force only
+    if test "$force" -eq 1 && test "$cached"  -eq 0
+    then
+        
+        rm -f "$file" 2> /dev/null
+        rm -f ".shrug/index/$file"
+        continue
+    fi    
+    
+    #if cached only
+    if test "$force" -eq 0 && test "$cached"  -eq 1
+    then
+        rm -f ".shrug/index/$file"       
+        continue
+    fi
+    
+   
+done
